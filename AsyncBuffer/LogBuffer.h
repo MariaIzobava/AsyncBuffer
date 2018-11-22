@@ -12,6 +12,7 @@ public:
 	}
 
 	void add() {
+		//std::cout << "EEE\n";
 		is_triggered_ = true;
 	}
 

@@ -14,11 +14,11 @@ public:
 	void add() {
 		count_++;
 		is_triggered_ = true;
-		std::cerr << "BBB!\n";
+		//std::cerr << "BBB!\n";
 	}
 
 	bool is_triggered() const {
-		std::cerr << is_triggered_ << ' ' << "AAA!\n";
+		//std::cerr << is_triggered_ << ' ' << "AAA!\n";
 		return is_triggered_;
 	}
 
