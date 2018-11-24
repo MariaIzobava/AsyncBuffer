@@ -3,27 +3,21 @@
 
 #include <functional>
 
-template <class Fn>
 class BaseBuffer {
-private:
-	Fn fn_;
 public:
-
-	BaseBuffer(Fn fn):fn_(fn) {}
 
 	virtual void callback() = 0;
 
+	virtual void add(int) = 0;
+	virtual void add() = 0;
+
 	virtual bool is_triggered() const = 0;
 
-protected:
-	template <class... Args>
-	void custom_callback(Args&&... args) {
-		fn_(std::forward<Args>(args)...);
+	template <class Fn, class... Args>
+	void custom_callback(Fn fn, Args&&... args) {
+		fn(std::forward<Args>(args)...);
 	}
 
-	
-
-	~BaseBuffer() {}
 };
 
 #endif //BASEBUFFER_H

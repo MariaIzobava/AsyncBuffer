@@ -1,15 +1,20 @@
+#ifndef QUEUEBUFFER_H
+#define QUEUEBUFFER_H
+
 #include <queue>
 #include <cassert>
 #include "BaseBuffer.h"
 
 template <class T, class Fn> 
-class QueueBuffer: public BaseBuffer<Fn> {
+class QueueBuffer: public BaseBuffer {
 private:
+	Fn fn_;
 	std::queue<T> q_;
 public:
-	QueueBuffer(Fn fn):BaseBuffer<Fn>(fn) {
-		
-	}
+	QueueBuffer(Fn fn):fn_(fn) {}
+
+	void add() {}
+
 	void add(T value) {
 		q_.push(value);
 	}
@@ -26,8 +31,10 @@ public:
 		assert(!q_.empty());
 		T current_element = q_.front();
 		q_.pop();
-		BaseBuffer<Fn>::custom_callback(current_element);
+		custom_callback(fn_, current_element);
 	}
 
 	~QueueBuffer() {}
 };
+
+#endif

@@ -1,18 +1,21 @@
+#ifndef LOGBUFFER_H
+#define LOGBUFFER_H
+
 #include <queue>
 #include <cassert>
 #include "BaseBuffer.h"
 
 template <class Fn>
-class LogBuffer :public BaseBuffer<Fn> {
+class LogBuffer :public BaseBuffer {
 public:
+	Fn fn_;
 	bool is_triggered_ = false;
 public:
-	LogBuffer(Fn fn) :BaseBuffer<Fn>(fn) {
+	LogBuffer(Fn fn) :fn_(fn) {}
 
-	}
+	void add(int) {}
 
 	void add() {
-		//std::cout << "EEE\n";
 		is_triggered_ = true;
 	}
 
@@ -21,9 +24,11 @@ public:
 	}
 
 	void callback() {
-		BaseBuffer<Fn>::custom_callback();
+		custom_callback(fn_);
 		is_triggered_ = false;
 	}
 
 	~LogBuffer() {}
 };
+
+#endif
