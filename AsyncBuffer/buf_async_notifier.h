@@ -12,13 +12,15 @@ private:
 
 	std::thread th_;
 	std::mutex mx_;
+	std::mutex mx_for_locking_thread_;
+	std::condition_variable pushed_;
 
 	void execute() {
-		while (!base_notifier<T>::stopping)
+		while (true)
 		{
-			
-			while (q_.empty()) {}
-
+			std::unique_lock<std::mutex> lock(mx_);
+			pushed_.wait(lock, [&]() { return base_notifier<T>::stopping || !q_.empty(); });
+			if (base_notifier<T>::stopping && q_.empty()) break;
 			base_notifier<T>::callback(q_.front());
 			q_.pop();
 
@@ -32,9 +34,14 @@ public:
 		th_ = std::thread(&buf_async_notifier<int>::execute, this);
 	}
 
-	void operator()(T val) {
-		std::lock_guard<std::mutex> lock(mx_);
-		q_.push(val);
+	bool operator()(std::queue<T> &solver_queue) {
+		if (q_.empty() && mx_.try_lock()) {
+			std::swap(q_, solver_queue);
+			mx_.unlock();
+			pushed_.notify_one();
+			return true;
+		}
+		return false;
 	}
 
 };

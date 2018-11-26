@@ -15,13 +15,15 @@ private:
 
 	std::thread th_;
 	std::mutex mx_;
+	std::mutex mx_for_locking_thread_;
+	std::condition_variable pushed_;
 
 	void execute() {
-		while (!base_notifier<T>::stopping)
+		while (true)
 		{
-
-			while (!is_triggered_) {}
-
+			std::unique_lock<std::mutex> lock(mx_);
+			pushed_.wait(lock, [&]() { return base_notifier<T>::stopping || is_triggered_; });
+			if (base_notifier<T>::stopping && !is_triggered_) break;
 			base_notifier<T>::callback(value_);
 			is_triggered_ = false;
 
@@ -35,11 +37,19 @@ public:
 		th_ = std::thread(&no_buf_async_notifier<std::string>::execute, this);
 	}
 
-	void operator()(T val) {
-		std::lock_guard<std::mutex> lock(mx_);
-		value_ = val;
-		is_triggered_ = true;
+	bool operator()(T val) {
+		//std::lock_guard<std::mutex> lock(mx_);
+		if (!is_triggered_ && !val.empty() && mx_.try_lock()) {
+			value_ = val;
+			is_triggered_ = true;
+			mx_.unlock();
+			pushed_.notify_one();
+			return true;
+		}
+		return false;
+
 	}
+
 
 };
 
