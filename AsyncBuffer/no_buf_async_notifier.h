@@ -6,7 +6,7 @@
 #include <mutex>
 
 template <class T>
-class no_buf_async_notifier: base_notifier<T> {
+class no_buf_async_notifier: public base_notifier<T> {
 
 private:
 	void(*_callback)(T);
@@ -17,22 +17,22 @@ private:
 	std::mutex mx_;
 
 	void execute() {
-		while (!g_stopping)
+		while (!base_notifier<T>::stopping)
 		{
 
 			while (!is_triggered_) {}
 
-			_callback(value_);
+			base_notifier<T>::callback(value_);
 			is_triggered_ = false;
 
-			//std::this_thread::sleep_for(std::chrono::seconds(1));
+			std::this_thread::sleep_for(std::chrono::seconds(1));
 
 		}
 	}
 public:
 
-	no_buf_async_notifier(void(*callback)(T)) : _callback(callback) {
-		th_ = std::thread(execute);
+	no_buf_async_notifier(void(*callback)(T)) : base_notifier<T>(callback) {
+		th_ = std::thread(&no_buf_async_notifier<std::string>::execute, this);
 	}
 
 	void operator()(T val) {

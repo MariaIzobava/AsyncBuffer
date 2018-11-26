@@ -5,7 +5,7 @@
 #include "base_notifier.h"
 
 template <class T>
-class buf_async_notifier : base_notifier<T> {
+class buf_async_notifier : public base_notifier<T> {
 private:
 
 	std::queue<T> q_;
@@ -14,22 +14,22 @@ private:
 	std::mutex mx_;
 
 	void execute() {
-		while (!g_stopping)
+		while (!base_notifier<T>::stopping)
 		{
 			
 			while (q_.empty()) {}
 
-			_callback(q_.front());
+			base_notifier<T>::callback(q_.front());
 			q_.pop();
 
-			//std::this_thread::sleep_for(std::chrono::seconds(1));
+			std::this_thread::sleep_for(std::chrono::seconds(1));
 
 		}
 	}
 public:
 
-	buf_async_notifier(void(*callback)(T)) : base_buffer(callback) {
-		th_ = std::thread(execute);
+	buf_async_notifier(void(*callback)(T)) : base_notifier<T>(callback) {
+		th_ = std::thread(&buf_async_notifier<int>::execute, this);
 	}
 
 	void operator()(T val) {
@@ -37,7 +37,6 @@ public:
 		q_.push(val);
 	}
 
-	
 };
 
 #endif
