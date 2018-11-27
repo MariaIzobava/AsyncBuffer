@@ -15,18 +15,23 @@ private:
 
 	std::thread th_;
 	std::mutex mx_;
-	std::mutex mx_for_locking_thread_;
 	std::condition_variable pushed_;
 
 	void execute() {
 		while (true)
 		{
-			std::unique_lock<std::mutex> lock(mx_);
-			pushed_.wait(lock, [&]() { return base_notifier<T>::stopping || is_triggered_; });
-			if (base_notifier<T>::stopping && !is_triggered_) break;
-			base_notifier<T>::callback(value_);
-			is_triggered_ = false;
+			T local_value_;
+			{
+				std::unique_lock<std::mutex> lock(mx_);
+				pushed_.wait(lock, [this]() {return base_notifier<T>::stopping || is_triggered_; });
+				if (base_notifier<T>::stopping && !is_triggered_) break;
+				std::swap(local_value_, value_);
+				is_triggered_ = false;
+			}
 
+
+			base_notifier<T>::callback(local_value_);
+		
 			std::this_thread::sleep_for(std::chrono::seconds(1));
 
 		}
@@ -37,20 +42,20 @@ public:
 		th_ = std::thread(&no_buf_async_notifier<std::string>::execute, this);
 	}
 
-	bool operator()(T val) {
-		//std::lock_guard<std::mutex> lock(mx_);
-		if (!is_triggered_ && !val.empty() && mx_.try_lock()) {
+	void operator()(T val) {
+		{
+			std::lock_guard<std::mutex> lock(mx_);
 			value_ = val;
 			is_triggered_ = true;
-			mx_.unlock();
-			pushed_.notify_one();
-			return true;
 		}
-		return false;
-
+		pushed_.notify_one();
+		
 	}
 
-
+	no_buf_async_notifier() {
+		base_notifier<T>::stop();
+		th_.join();
+	}
 };
 
 #endif

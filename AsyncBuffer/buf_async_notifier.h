@@ -8,24 +8,30 @@ template <class T>
 class buf_async_notifier : public base_notifier<T> {
 private:
 
-	std::queue<T> q_;
+	std::queue<T> thread_q_;
 
 	std::thread th_;
 	std::mutex mx_;
-	std::mutex mx_for_locking_thread_;
 	std::condition_variable pushed_;
 
 	void execute() {
 		while (true)
 		{
-			std::unique_lock<std::mutex> lock(mx_);
-			pushed_.wait(lock, [&]() { return base_notifier<T>::stopping || !q_.empty(); });
-			if (base_notifier<T>::stopping && q_.empty()) break;
-			base_notifier<T>::callback(q_.front());
-			q_.pop();
+			std::queue<T> local_q_;
+			{
+				std::unique_lock<std::mutex> lock(mx_);
+				pushed_.wait(lock, [this]() {return base_notifier<T>::stopping || !thread_q_.empty(); });
+				if (base_notifier<T>::stopping && thread_q_.empty()) break;
+				std::swap(local_q_, thread_q_);
+			}
 
-			std::this_thread::sleep_for(std::chrono::seconds(1));
+			while (!local_q_.empty()) {
+				base_notifier<T>::callback(local_q_.front());
+				local_q_.pop();
+				std::this_thread::sleep_for(std::chrono::seconds(2));
+			}
 
+			
 		}
 	}
 public:
@@ -34,14 +40,17 @@ public:
 		th_ = std::thread(&buf_async_notifier<int>::execute, this);
 	}
 
-	bool operator()(std::queue<T> &solver_queue) {
-		if (q_.empty() && mx_.try_lock()) {
-			std::swap(q_, solver_queue);
-			mx_.unlock();
-			pushed_.notify_one();
-			return true;
+	void operator()(T val) {
+		{
+			std::unique_lock<std::mutex> lock(mx_);
+			thread_q_.push(val);
 		}
-		return false;
+		pushed_.notify_one();
+	}
+
+	buf_async_notifier() {
+		base_notifier<T>::stop();
+		th_.join();
 	}
 
 };
