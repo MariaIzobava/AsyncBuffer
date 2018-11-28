@@ -48,7 +48,7 @@ public:
 		pushed_.notify_one();
 	}
 
-	buf_async_notifier() {
+	~buf_async_notifier() {
 		base_notifier<T>::stop();
 		th_.join();
 	}

@@ -52,7 +52,7 @@ public:
 		
 	}
 
-	no_buf_async_notifier() {
+	~no_buf_async_notifier() {
 		base_notifier<T>::stop();
 		th_.join();
 	}
