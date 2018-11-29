@@ -12,7 +12,8 @@ class queue_buffer: public generic_buffer<T, std::queue<T>, T> {
 	std::thread th_;
 public:
 	queue_buffer(void(*callback)(T)) : _callback(callback), generic_buffer<T, std::queue<T>, T>() {
-		generic_buffer<T, std::queue<T>, T>::one_shot_signal.signal();
+		//generic_buffer<T, std::queue<T>, T>::one_shot_signal.signal();
+		generic_buffer<T, std::queue<T>, T>::createThread();
 
 	}
 

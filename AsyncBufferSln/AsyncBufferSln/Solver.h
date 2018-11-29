@@ -13,9 +13,7 @@ public:
 	: buff_callback_(new_callback), optional_callback_(callback){}
 
 	void run() {
-		for (int i = 0; i < 5; i++) {
-			//_callback(i);
-			//_logger(std::to_string(i));
+		for (int i = 0; i < 6; i++) {
 			optional_callback_(std::to_string(i));
 			buff_callback_(i);
 			std::this_thread::sleep_for(std::chrono::seconds(1));

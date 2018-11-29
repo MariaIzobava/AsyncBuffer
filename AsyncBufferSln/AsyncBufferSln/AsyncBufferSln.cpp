@@ -5,13 +5,19 @@
 #include <mutex>
 #include "solver.h"
 #include <string>
+#include <sstream>
+
 
 void f1(int t) {
-	std::cout << "Generated element" << ": " << t << std::endl;
+	std::stringstream ss;
+	ss << "Generated element" << ": " << t << std::endl;
+	std::cout << ss.str();
 }
 
 void f2(std::string k) {
-	std::cout << "Number of generated elements" << ": " << k << std::endl;
+	std::stringstream ss;
+	ss << "Number of generated elements" << ": " << k << std::endl;
+	std::cout << ss.str();
 }
 
 

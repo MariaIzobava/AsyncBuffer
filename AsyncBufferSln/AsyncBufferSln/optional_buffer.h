@@ -12,8 +12,8 @@ class optional_buffer : public generic_buffer<T, std::optional<T>, T> {
 	std::thread th_;
 public:
 	optional_buffer(void(*callback)(T)) : _callback(callback), generic_buffer<T, std::optional<T>, T>() {
-		generic_buffer<T, std::optional<T>, T>::one_shot_signal.signal();
-
+		//generic_buffer<T, std::optional<T>, T>::one_shot_signal.signal();
+		generic_buffer<T, std::optional<T>, T>::createThread();
 	}
 
 	bool is_empty(const std::optional<T>& container) const {

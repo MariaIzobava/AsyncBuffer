@@ -39,7 +39,7 @@ class generic_buffer {
 	std::condition_variable pushed_;
 
 	void execute() {
-		one_shot_signal.wait();
+		//one_shot_signal.wait();
 		while (true)
 		{
 			S local_q_;
@@ -64,15 +64,15 @@ class generic_buffer {
 	}
 
 
-
 protected:
 	one_shot one_shot_signal;
+	void createThread() {
+		th_ = std::thread(&generic_buffer<T, S, U>::execute, this);
+	}
 
 public:
 
-	generic_buffer() {
-		th_ = std::thread(&generic_buffer<T, S, U>::execute, this);
-	}
+	generic_buffer() {}
 
 	virtual bool is_empty(const S& container) const = 0;
 
