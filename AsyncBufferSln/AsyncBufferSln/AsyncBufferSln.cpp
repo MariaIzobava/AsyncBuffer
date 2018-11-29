@@ -17,7 +17,7 @@ void f2(std::string k) {
 
 int main()
 {
-	auto solver = new Solver(f1, f2, f1);
+	auto solver = new Solver(f1, f2);
 
 	solver->run();
 	getchar();
